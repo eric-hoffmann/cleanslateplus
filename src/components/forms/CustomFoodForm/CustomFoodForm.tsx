@@ -314,7 +314,7 @@ export const CustomFoodForm: React.FC<props> = ({ food }) => {
             <a
               target="_blank"
               rel="noopener noreferrer"
-              href={`https://world.openfoodfacts.org/product/${food.openFoodFactsCode}`}
+              href={`https://world.openfoodfacts.net/product/${food.openFoodFactsCode}`}
             >
               {food.openFoodFactsCode}
             </a>

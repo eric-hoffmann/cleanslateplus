@@ -40,7 +40,7 @@ export const BarcodeModal: React.FC<props> = ({ profile, type }) => {
   const fetchData = debounce((code: string) => {
     setRan(true)
     axios
-      .get(`https://world.openfoodfacts.org/api/v0/product/${code}.json`)
+      .get(`https://world.openfoodfacts.net/api/v2/product/${code}.json`)
       .then((r) => {
         if (r.data.status_verbose !== 'product found') {
           dispatch('closeBarcodeModal')
