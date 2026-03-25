@@ -1,6 +1,8 @@
 import { css } from '@emotion/react'
+import { useRouter } from 'next/router'
 import type React from 'react'
 import Barcode from '../../assets/common/barcode.svg'
+import Calendar from '../../assets/common/calendar.svg'
 import Exercise from '../../assets/common/exercise.svg'
 import Rocket from '../../assets/common/fast.svg'
 import Hamburger from '../../assets/common/hamburger.svg'
@@ -19,6 +21,7 @@ export const BottomBarButtons: React.FC<props> = ({ profile }) => {
   }: {
     dispatch: Dispatch<AllEvents>
   } = useStoreon()
+  const router = useRouter()
 
   const buttons = css`
     border-top: 1px solid ${colors.white};
@@ -88,6 +91,16 @@ export const BottomBarButtons: React.FC<props> = ({ profile }) => {
           <img alt="Barcode" src={Barcode.src} />
         </button>
       )}
+
+      <button
+        id="openHistory"
+        type="button"
+        onClick={() => {
+          router.push('/history')
+        }}
+      >
+        <img alt="Calendar for history" src={Calendar.src} />
+      </button>
 
       <button
         id="openModal"
