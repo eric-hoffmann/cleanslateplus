@@ -8,15 +8,47 @@ import { DayDetail } from '../components/history/DayDetail'
 import { HistorySummary } from '../components/history/HistorySummary'
 import { getWeekRange } from '../components/history/helpers'
 import { GET_HISTORY_DATA } from '../graphql/history'
-import { addBasicFoodsToProfile } from '../helpers/profile/addBasicFoodsToProfile'
+import { getBasicFoods } from '../helpers/Food/getBasicFoods'
 import { stringifyQuery } from '../helpers/stringifyQuery'
 import { useData } from '../hooks/useData'
 import type { Log } from '../models/log'
-import type { Profile } from '../models/profile'
 import type { QuickLog } from '../models/quickLog'
 import type { ExerciseLog } from '../models/exerciseLog'
 import { colors } from '../theme'
 import Back from '../assets/common/back.svg'
+
+const { basicFoodsManifest } = getBasicFoods()
+
+/** Deep-clone and enrich logs with basic food data from the local JSON manifest */
+const enrichLogs = (logs: readonly any[]): Log[] => {
+  return logs
+    .map((log) => {
+      const enriched = { ...log }
+      const basicFoodId = enriched.basicFood
+      if (basicFoodId && basicFoodsManifest[basicFoodId]) {
+        enriched.logToFood = basicFoodsManifest[basicFoodId]
+      }
+      if (enriched.logToRecipe) {
+        enriched.logToRecipe = {
+          ...enriched.logToRecipe,
+          ingredients: (enriched.logToRecipe.ingredients || []).map(
+            (ing: any) => {
+              const copy = { ...ing }
+              if (copy.basicFood && basicFoodsManifest[copy.basicFood]) {
+                copy.ingredientToFood = basicFoodsManifest[copy.basicFood]
+              }
+              return copy
+            }
+          ),
+        }
+      }
+      return enriched as Log
+    })
+    .filter((log) => {
+      const basicFoodId = log.basicFood
+      return !basicFoodId || basicFoodsManifest[basicFoodId]
+    })
+}
 
 const HistoryContent = () => {
   const { profile } = useData()
@@ -36,17 +68,15 @@ const HistoryContent = () => {
 
   const historyProfile = data?.profiles?.[0]
 
-  // Enrich logs with basic food data (same as main app's handleData)
+  // Enrich logs with basic food data (clone to avoid mutating frozen Apollo cache)
   const { logs, quickLogs, exerciseLogs } = useMemo(() => {
     if (!historyProfile) {
       return { logs: [] as Log[], quickLogs: [] as QuickLog[], exerciseLogs: [] as ExerciseLog[] }
     }
-    const { profiles } = addBasicFoodsToProfile([historyProfile as Profile])
-    const enriched = profiles[0]
     return {
-      logs: enriched.logs || [],
-      quickLogs: enriched.quick_logs || [],
-      exerciseLogs: enriched.exercise_logs || [],
+      logs: enrichLogs(historyProfile.logs || []),
+      quickLogs: (historyProfile.quick_logs || []).map((ql: any) => ({ ...ql })) as QuickLog[],
+      exerciseLogs: (historyProfile.exercise_logs || []).map((el: any) => ({ ...el })) as ExerciseLog[],
     }
   }, [historyProfile])
 
