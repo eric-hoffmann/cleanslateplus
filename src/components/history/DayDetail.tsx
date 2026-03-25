@@ -323,7 +323,7 @@ export const DayDetail: React.FC<Props> = ({
           </div>
           {dayExerciseLogs.map((el) => (
             <div key={el.id} css={itemRow}>
-              <div css={itemName}>{el.name}</div>
+              <div css={itemName}>{el.name || el.groupName || 'Exercise'}</div>
               <div className="frc">
                 <span css={macroTag}>
                   <Image
