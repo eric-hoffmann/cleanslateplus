@@ -2,15 +2,17 @@ import { gql, useQuery } from '@apollo/client'
 import { css } from '@emotion/react'
 import type { Dayjs } from 'dayjs'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { AuthGate } from '../components/auth-gate/AuthGate'
 import { DayDetail } from '../components/history/DayDetail'
 import { HistorySummary } from '../components/history/HistorySummary'
 import { getWeekRange } from '../components/history/helpers'
 import { GET_HISTORY_DATA } from '../graphql/history'
+import { addBasicFoodsToProfile } from '../helpers/profile/addBasicFoodsToProfile'
 import { stringifyQuery } from '../helpers/stringifyQuery'
 import { useData } from '../hooks/useData'
 import type { Log } from '../models/log'
+import type { Profile } from '../models/profile'
 import type { QuickLog } from '../models/quickLog'
 import type { ExerciseLog } from '../models/exerciseLog'
 import { colors } from '../theme'
@@ -33,9 +35,20 @@ const HistoryContent = () => {
   })
 
   const historyProfile = data?.profiles?.[0]
-  const logs: Log[] = historyProfile?.logs || []
-  const quickLogs: QuickLog[] = historyProfile?.quick_logs || []
-  const exerciseLogs: ExerciseLog[] = historyProfile?.exercise_logs || []
+
+  // Enrich logs with basic food data (same as main app's handleData)
+  const { logs, quickLogs, exerciseLogs } = useMemo(() => {
+    if (!historyProfile) {
+      return { logs: [] as Log[], quickLogs: [] as QuickLog[], exerciseLogs: [] as ExerciseLog[] }
+    }
+    const { profiles } = addBasicFoodsToProfile([historyProfile as Profile])
+    const enriched = profiles[0]
+    return {
+      logs: enriched.logs || [],
+      quickLogs: enriched.quick_logs || [],
+      exerciseLogs: enriched.exercise_logs || [],
+    }
+  }, [historyProfile])
 
   const container = css`
     height: 100%;
